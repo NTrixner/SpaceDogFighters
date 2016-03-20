@@ -22,80 +22,121 @@ GameWindow {
 
     Scene {
         id: scene
+        Keys.forwardTo: twoAxisController
+
+
 
         // the "logical size" - the scene content is auto-scaled to match the GameWindow size
         width: 480
         height: 320
 
-        // background rectangle matching the logical scene size (= safe zone available on all devices)
-        // see here for more details on content scaling and safe zone: http://v-play.net/doc/vplay-different-screen-sizes/
-        Rectangle {
-            id: rectangle
-            anchors.fill: parent
-            color: "grey"
+        PhysicsWorld {
+                   id: world
+                   updatesPerSecondForPhysics: 60
+                   debugDrawVisible: true
+               }
 
-            Text {
-                id: textElement
-                // qsTr() uses the internationalization feature for multi-language support
-                text: qsTr("Hello V-Play World")
-                color: "#ffffff"
-                anchors.centerIn: parent
+        Image{
+            id: bg
+            source: "../assets/152143.jpg"
+            anchors.fill: parent.gameWindowAnchorItem
+        }
+
+        Text {
+           text: hawk.x + ":" + hawk.y
+           color: "white"
+           anchors.horizontalCenter: scene.horizontalCenter
+           y: 30
+           font.pixelSize: 30
+         }
+
+        Hawk{
+            id: hawk
+            x: 20
+            y: 130
+            property bool touchesLeft: false
+            property bool touchesRight: false
+            property bool touchesUp: false
+            property bool touchesDown: false
+
+            TwoAxisController {
+                id: twoAxisController
+
+                // whenever the thumb position changes, update the twoAxisController
+                xAxis: joystickController.controllerXPosition
+                yAxis: joystickController.controllerYPosition
             }
 
-            MouseArea {
-                anchors.fill: parent
+            BoxCollider {
+                collidesWith: Box.Category1 | Box.Category2
+                id: hawkCollider
+                width: parent.width; height: parent.height
 
-                // when the rectangle that fits the whole scene is pressed, change the background color and the text
-                onPressed: {
-                    textElement.text = qsTr("Scene-Rectangle is pressed at position " + Math.round(mouse.x) + "," + Math.round(mouse.y))
-                    rectangle.color = "black"
-                    console.debug("pressed position:", mouse.x, mouse.y)
-                }
+                restitution: 0
 
-                onPositionChanged: {
-                    textElement.text = qsTr("Scene-Rectangle is moved at position " + Math.round(mouse.x) + "," + Math.round(mouse.y))
-                    console.debug("mouseMoved or touchDragged position:", mouse.x, mouse.y)
-                }
-
-                // revert the text & color after the touch/mouse button was released
-                // also States could be used for that - search for "QML States" in the doc
-                onReleased: {
-                    textElement.text = qsTr("Hello V-Play World")
-                    rectangle.color = "grey"
-                    console.debug("released position:", mouse.x, mouse.y)
-                }
-            }
-        }// Rectangle with size of logical scene
-
-        Image {
-            id: vplayLogo
-            source: "../assets/vplay-logo.png"
-
-            // 50px is the "logical size" of the image, based on the scene size 480x320
-            // on hd or hd2 displays, it will be shown at 100px (hd) or 200px (hd2)
-            // thus this image should be at least 200px big to look crisp on all resolutions
-            // for more details, see here: http://v-play.net/doc/vplay-different-screen-sizes/
-            width: 50
-            height: 50
-
-            // this positions it absolute right and top of the GameWindow
-            // change resolutions with Ctrl (or Cmd on Mac) + the number keys 1-8 to see the effect
-            anchors.right: scene.gameWindowAnchorItem.right
-            anchors.top: scene.gameWindowAnchorItem.top
-
-            // this animation sequence fades the V-Play logo in and out infinitely (by modifying its opacity property)
-            SequentialAnimation on opacity {
-                loops: Animation.Infinite
-                PropertyAnimation {
-                    to: 0
-                    duration: 1000 // 1 second for fade out
-                }
-                PropertyAnimation {
-                    to: 1
-                    duration: 1000 // 1 second for fade in
-                }
+                linearVelocity: Qt.point(150*twoAxisController.xAxis, -150*twoAxisController.yAxis)
             }
         }
 
+        EntityBase{
+            id: border
+            BoxCollider{
+                collidesWith: Box.Category1
+                categories: Box.Category2
+                id: topCollider
+                width: scene.width
+                height: 20
+                y: 0
+                x: 0
+                bodyType: Body.Static
+            }
+            BoxCollider{
+                collidesWith: Box.Category1
+                categories: Box.Category2
+                id: bottomCollider
+                width: scene.width
+                height: 20
+                y: scene.height - 20
+                x: 0
+                bodyType: Body.Static
+            }
+            BoxCollider{
+                collidesWith: Box.Category1
+                categories: Box.Category2
+                id: leftCollider
+                width: 20
+                height: scene.height - 40
+                y: 20
+                x: 0
+                bodyType: Body.Static
+            }
+            BoxCollider{
+                collidesWith: Box.Category1
+                categories: Box.Category2
+                id: rightCollider
+                width: 20
+                height: scene.height - 40
+                y: 20
+                x: scene.width * 0.6
+                bodyType: Body.Static
+            }
+        }
+    }
+    JoystickControllerHUD {
+         id: joystickController
+
+         anchors{
+             left: parent.left
+             bottom: parent.bottom
+             leftMargin: 10
+             bottomMargin: 10
+         }
+
+         width: parent.width * 0.1; height: parent.width * 0.1
+
+         visible: system.debugBuild || system.desktopPlatform
+
+         onControllerXPositionChanged: twoAxisController.xAxis = controllerXPosition;
+         onControllerYPositionChanged: twoAxisController.yAxis = controllerYPosition;
     }
 }
