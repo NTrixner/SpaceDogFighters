@@ -43,7 +43,7 @@ GameWindow {
         }
 
         Text {
-           text: hawk.x + ":" + hawk.y
+           text: "Health: " + hawk.health
            color: "white"
            anchors.horizontalCenter: scene.horizontalCenter
            y: 30
@@ -54,27 +54,20 @@ GameWindow {
             id: hawk
             x: 20
             y: 130
-            property bool touchesLeft: false
-            property bool touchesRight: false
-            property bool touchesUp: false
-            property bool touchesDown: false
 
             TwoAxisController {
                 id: twoAxisController
 
-                // whenever the thumb position changes, update the twoAxisController
                 xAxis: joystickController.controllerXPosition
                 yAxis: joystickController.controllerYPosition
             }
 
             BoxCollider {
-                collidesWith: Box.Category1 | Box.Category2
+                collidesWith: Box.Category2
                 id: hawkCollider
                 width: parent.width; height: parent.height
 
-                restitution: 0
-
-                linearVelocity: Qt.point(150*twoAxisController.xAxis, -150*twoAxisController.yAxis)
+                linearVelocity: Qt.point(hawk.speed*twoAxisController.xAxis, -1*hawk.speed*twoAxisController.yAxis)
             }
         }
 
