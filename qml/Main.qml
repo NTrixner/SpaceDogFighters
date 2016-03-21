@@ -67,17 +67,7 @@ GameWindow {
                 }
                 onInputActionPressed: {
                     if(actionName == "fire") {
-                        var newEntityProperties = {
-                            pointOfOrigin: Qt.point(
-                                hawk.x + hawk.width * 0.6,
-                                hawk.y + (hawk.height/2)),
-                            z: 1
-                        }
-
-                        entityManager.createEntityFromUrlWithProperties(
-                                    Qt.resolvedUrl("Laser.qml"),
-                                    newEntityProperties);
-
+                        shootLaser();
                     }
                     if(actionName == "altfire") {
                         shootRocket();
@@ -172,12 +162,14 @@ GameWindow {
         x: 10
         font.pixelSize: 30
     }
+
+    //Rocket HUD
     Image{
         id: rocketHUDImage
         source: "../assets/rocket_HUD.png"
         anchors {
             bottom: parent.bottom
-            right: parent.right
+            right: laserHUDImage.left
             rightMargin: 10
             bottomMargin: 10
         }
@@ -202,6 +194,39 @@ GameWindow {
         }
         font.pixelSize: 30
     }
+    //Laser HUD
+    Image{
+        id: laserHUDImage
+        source: "../assets/laser_HUD.png"
+        anchors {
+            bottom: parent.bottom
+            right: parent.right
+            rightMargin: 10
+            bottomMargin: 10
+        }
+        width: parent.width * 0.1; height: parent.width * 0.1
+        MouseArea{
+            height: parent.height
+            width: parent.width
+            onClicked:{
+                shootLaser();
+            }
+        }
+    }
+    Text{
+        id: laserText
+        text: "∞"
+        color: "white"
+        anchors {
+            bottom: laserHUDImage.bottom
+            right: laserHUDImage.right
+            rightMargin: laserHUDImage.width * 0.08
+            bottomMargin: laserHUDImage.height * 0.08
+        }
+        font.pixelSize: 30
+    }
+
+
 
     function shootRocket(){
         if(hawk.rockets > 0 ){
@@ -217,6 +242,19 @@ GameWindow {
                         newEntityProperties);
             hawk.rockets--;
         }
+    }
+
+    function shootLaser(){
+        var newEntityProperties = {
+            pointOfOrigin: Qt.point(
+                hawk.x + hawk.width * 0.6,
+                hawk.y + (hawk.height/2)),
+            z: 1
+        }
+
+        entityManager.createEntityFromUrlWithProperties(
+                    Qt.resolvedUrl("Laser.qml"),
+                    newEntityProperties);
     }
 }
 
