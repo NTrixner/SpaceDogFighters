@@ -20,6 +20,11 @@ GameWindow {
     screenWidth: 960
     screenHeight: 640
 
+    EntityManager {
+        id: entityManager
+        entityContainer: scene
+    }
+
     Scene {
         id: scene
         Keys.forwardTo: twoAxisController
@@ -29,37 +34,66 @@ GameWindow {
         height: 320
 
         PhysicsWorld {
-                   id: world
-                   updatesPerSecondForPhysics: 60
-                   debugDrawVisible: true
-               }
+            id: world
+            updatesPerSecondForPhysics: 60
+            debugDrawVisible: true
+        }
 
         Image{
             id: bg
             source: "../assets/152143.jpg"
             anchors.fill: parent.gameWindowAnchorItem
+            z: 0
         }
-
-        Text {
-           text: "Health: " + hawk.health
-           color: "white"
-           anchors.horizontalCenter: scene.horizontalCenter
-           y: 30
-           font.pixelSize: 30
-         }
 
         Hawk{
             id: hawk
             x: 20
             y: 130
+            z: 2
 
             TwoAxisController {
                 id: twoAxisController
 
                 xAxis: joystickController.controllerXPosition
                 yAxis: joystickController.controllerYPosition
-            }
+                inputActionsToKeyCode: {
+                    "fire": Qt.Key_Control,
+                    "altfire": Qt.Key_Alt,
+                    "up":Qt.Key_Up,
+                    "down":Qt.Key_Down,
+                    "left":Qt.Key_Left,
+                    "right":Qt.Key_Right
+                }
+                onInputActionPressed: {
+                    if(actionName == "fire") {
+                        var newEntityProperties = {
+                            x: hawk.x + (hawk.width / 2),
+                            y: hawk.y + hawk.height
+                        }
 
+                        entityManager.createEntityFromUrlWithProperties(
+                                    Qt.resolvedUrl("Laser.qml"),
+                                    newEntityProperties);
+
+                    }
+                    if(actionName == "altfire") {
+                        if(hawk.rockets > 0 ){
+                            newEntityProperties = {
+                                pointOfOrigin: Qt.point(
+                                    hawk.x + hawk.width * 0.6,
+                                    hawk.y + (hawk.height/2)),
+                                z: 1
+                            }
+
+                            entityManager.createEntityFromUrlWithProperties(
+                                        Qt.resolvedUrl("Rocket.qml"),
+                                        newEntityProperties);
+                            hawk.rockets--;
+                        }
+                    }
+                }
+            }
             BoxCollider {
                 collidesWith: Box.Category2
                 id: hawkCollider
@@ -112,22 +146,40 @@ GameWindow {
                 bodyType: Body.Static
             }
         }
+
     }
     JoystickControllerHUD {
-         id: joystickController
+        id: joystickController
 
-         anchors{
-             left: parent.left
-             bottom: parent.bottom
-             leftMargin: 10
-             bottomMargin: 10
-         }
+        anchors{
+            left: parent.left
+            bottom: parent.bottom
+            leftMargin: 10
+            bottomMargin: 10
+        }
 
-         width: parent.width * 0.1; height: parent.width * 0.1
+        width: parent.width * 0.1; height: parent.width * 0.1
 
-         visible: system.debugBuild || system.desktopPlatform
+        visible: system.debugBuild || system.desktopPlatform
 
-         onControllerXPositionChanged: twoAxisController.xAxis = controllerXPosition;
-         onControllerYPositionChanged: twoAxisController.yAxis = controllerYPosition;
+        onControllerXPositionChanged: twoAxisController.xAxis = controllerXPosition;
+        onControllerYPositionChanged: twoAxisController.yAxis = controllerYPosition;
+    }
+    //HUD
+    Text {
+        id: healthText
+        text: "Health: " + hawk.health
+        color: "white"
+        y: 10
+        x: 150
+        font.pixelSize: 30
+    }
+    Text {
+        id:  livesText
+        text: "Lives: " + hawk.lives
+        color: "white"
+        y: 10
+        x: 10
+        font.pixelSize: 30
     }
 }

@@ -44,4 +44,6 @@ macx {
 
 DISTFILES += \
     LICENSE \
-    README.md
+    README.md \
+    qml/Rocket.qml \
+    qml/Laser.qml
