@@ -68,8 +68,10 @@ GameWindow {
                 onInputActionPressed: {
                     if(actionName == "fire") {
                         var newEntityProperties = {
-                            x: hawk.x + (hawk.width / 2),
-                            y: hawk.y + hawk.height
+                            pointOfOrigin: Qt.point(
+                                hawk.x + hawk.width * 0.6,
+                                hawk.y + (hawk.height/2)),
+                            z: 1
                         }
 
                         entityManager.createEntityFromUrlWithProperties(
@@ -78,19 +80,7 @@ GameWindow {
 
                     }
                     if(actionName == "altfire") {
-                        if(hawk.rockets > 0 ){
-                            newEntityProperties = {
-                                pointOfOrigin: Qt.point(
-                                    hawk.x + hawk.width * 0.6,
-                                    hawk.y + (hawk.height/2)),
-                                z: 1
-                            }
-
-                            entityManager.createEntityFromUrlWithProperties(
-                                        Qt.resolvedUrl("Rocket.qml"),
-                                        newEntityProperties);
-                            hawk.rockets--;
-                        }
+                        shootRocket();
                     }
                 }
             }
@@ -192,6 +182,13 @@ GameWindow {
             bottomMargin: 10
         }
         width: parent.width * 0.1; height: parent.width * 0.1
+        MouseArea{
+            height: parent.height
+            width: parent.width
+            onClicked:{
+                shootRocket();
+            }
+        }
     }
     Text{
         id: rocketText
@@ -205,4 +202,22 @@ GameWindow {
         }
         font.pixelSize: 30
     }
+
+    function shootRocket(){
+        if(hawk.rockets > 0 ){
+            var newEntityProperties = {
+                pointOfOrigin: Qt.point(
+                    hawk.x + hawk.width * 0.6,
+                    hawk.y + (hawk.height/2)),
+                z: 1
+            }
+
+            entityManager.createEntityFromUrlWithProperties(
+                        Qt.resolvedUrl("Rocket.qml"),
+                        newEntityProperties);
+            hawk.rockets--;
+        }
+    }
 }
+
+

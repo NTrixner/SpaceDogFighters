@@ -17,11 +17,7 @@ EntityBase {
     BoxCollider{
         collidesWith: Box.Category3
         categories: Box.Category4
-        id: hawkCollider
         width: parent.width; height: parent.height
-
-
         linearVelocity: Qt.point(100, 0)
-
     }
 }
