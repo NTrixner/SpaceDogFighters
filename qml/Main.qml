@@ -175,11 +175,34 @@ GameWindow {
         font.pixelSize: 30
     }
     Text {
-        id:  livesText
+        id: livesText
         text: "Lives: " + hawk.lives
         color: "white"
         y: 10
         x: 10
+        font.pixelSize: 30
+    }
+    Image{
+        id: rocketHUDImage
+        source: "../assets/rocket_HUD.png"
+        anchors {
+            bottom: parent.bottom
+            right: parent.right
+            rightMargin: 10
+            bottomMargin: 10
+        }
+        width: parent.width * 0.1; height: parent.width * 0.1
+    }
+    Text{
+        id: rocketText
+        text: hawk.rockets
+        color: "white"
+        anchors {
+            bottom: rocketHUDImage.bottom
+            right: rocketHUDImage.right
+            rightMargin: rocketHUDImage.width * 0.08
+            bottomMargin: rocketHUDImage.height * 0.08
+        }
         font.pixelSize: 30
     }
 }
