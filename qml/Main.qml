@@ -32,7 +32,7 @@ GameWindow {
         // the "logical size" - the scene content is auto-scaled to match the GameWindow size
         width: 480
         height: 320
-        property bool inWave: false;
+        property bool running: true;
         property int enemyAmount: 0;
 
         PhysicsWorld {
@@ -40,6 +40,21 @@ GameWindow {
             updatesPerSecondForPhysics: 60
             debugDrawVisible: false
         }
+
+        function showGameOver() {
+            waveTimer.stop();
+            scene.running = false;
+            world.running = false;
+            livesText.text = "";
+            healthText.text = "";
+            gameOverRect.visible = true;
+            gameOverText.visible = true;
+            joystickController.visible = false;
+            laserHUDImage.visible = false;
+            rocketHUDImage.visible = false;
+            entityManager.removeAllEntities();
+        }
+
 
         Image{
             id: bg
@@ -53,6 +68,7 @@ GameWindow {
             x: 20
             y: 130
             z: 2
+            scene: scene
 
             TwoAxisController {
                 id: twoAxisController
@@ -94,7 +110,7 @@ GameWindow {
                 id: topCollider
                 width: scene.width
                 height: 20
-                y: 0
+                y: -20
                 x: 0
                 bodyType: Body.Static
             }
@@ -104,7 +120,7 @@ GameWindow {
                 id: bottomCollider
                 width: scene.width
                 height: 20
-                y: scene.height - 20
+                y: scene.height
                 x: 0
                 bodyType: Body.Static
             }
@@ -113,9 +129,9 @@ GameWindow {
                 categories: Box.Category2
                 id: leftCollider
                 width: 20
-                height: scene.height - 40
+                height: scene.height
                 y: 20
-                x: 0
+                x: -20
                 bodyType: Body.Static
             }
             BoxCollider{
@@ -123,7 +139,7 @@ GameWindow {
                 categories: Box.Category2
                 id: rightCollider
                 width: 20
-                height: scene.height - 40
+                height: scene.height
                 y: 20
                 x: scene.width * 0.6
                 bodyType: Body.Static
@@ -144,114 +160,134 @@ GameWindow {
                     scene.inWave = true;
                 }
         }
-
-    }
-    JoystickControllerHUD {
-        id: joystickController
-
-        anchors{
-            left: parent.left
-            bottom: parent.bottom
-            leftMargin: 10
-            bottomMargin: 10
-        }
-
-        width: parent.width * 0.1; height: parent.width * 0.1
-
-        visible: true
-
-        onControllerXPositionChanged: twoAxisController.xAxis = controllerXPosition;
-        onControllerYPositionChanged: twoAxisController.yAxis = controllerYPosition;
-    }
-    //HUD
-    Text {
-        id: healthText
-        text: "Health: " + hawk.health
-        color: "white"
-        anchors{
-            left: parent.left
-            top: parent.top
-            leftMargin: 10
-            topMargin: 10
-        }
-
-        font.pointSize: 30
-    }
-    Text {
-        id: livesText
-        text: "Lives: " + hawk.lives
-        color: "white"
-        anchors{
-            right: parent.right
-            top: parent.top
-            leftMargin: 10
-            topMargin: 10
-        }
-        font.pointSize: 30
-    }
-
-    //Rocket HUD
-    Image{
-        id: rocketHUDImage
-        source: "../assets/rocket_HUD.png"
-        anchors {
-            bottom: parent.bottom
-            right: laserHUDImage.left
-            rightMargin: 10
-            bottomMargin: 10
-        }
-        width: parent.width * 0.1; height: parent.width * 0.1
-        MouseArea{
-            height: parent.height
-            width: parent.width
-            onClicked:{
-                shootRocket();
+        Rectangle{
+            visible: false
+            id: gameOverRect
+            color: "#88888888"
+            anchors.fill: scene.gameWindowAnchorItem
+            z: 10
+            Text{
+                id: gameOverText
+                text: "Game Over!"
+                color: "white"
+                anchors{
+                    verticalCenter: parent.verticalCenter
+                    horizontalCenter: parent.horizontalCenter
+                }
             }
         }
     }
-    Text{
-        id: rocketText
-        text: hawk.rockets
-        color: "white"
-        anchors {
-            bottom: rocketHUDImage.bottom
-            right: rocketHUDImage.right
-            rightMargin: rocketHUDImage.width * 0.08
-            bottomMargin: rocketHUDImage.height * 0.08
+
+        JoystickControllerHUD {
+            id: joystickController
+
+            anchors{
+                left: parent.left
+                bottom: parent.bottom
+                leftMargin: 10
+                bottomMargin: 10
+            }
+
+            width: parent.width * 0.1; height: parent.width * 0.1
+
+            visible: true
+
+            onControllerXPositionChanged: twoAxisController.xAxis = controllerXPosition;
+            onControllerYPositionChanged: twoAxisController.yAxis = controllerYPosition;
+
         }
-        font.pointSize: 30
-    }
-    //Laser HUD
-    Image{
-        id: laserHUDImage
-        source: "../assets/laser_HUD.png"
-        anchors {
-            bottom: parent.bottom
-            right: parent.right
-            rightMargin: 10
-            bottomMargin: 10
+        //HUD
+        Text {
+            id: healthText
+            text: "Health: " + hawk.health
+            color: "white"
+            anchors{
+                left: parent.left
+                top: parent.top
+                leftMargin: 10
+                topMargin: 10
+            }
+
+            font.pointSize: 30
         }
-        width: parent.width * 0.1; height: parent.width * 0.1
-        MouseArea{
-            height: parent.height
-            width: parent.width
-            onClicked:{
-                shootLaser();
+        Text {
+            id: livesText
+            text: "Lives: " + hawk.lives
+            color: "white"
+            anchors{
+                right: parent.right
+                top: parent.top
+                leftMargin: 10
+                topMargin: 10
+            }
+            font.pointSize: 30
+        }
+
+        //Rocket HUD
+        Image{
+            id: rocketHUDImage
+            source: "../assets/rocket_HUD.png"
+            anchors {
+                bottom: parent.bottom
+                right: laserHUDImage.left
+                rightMargin: 10
+                bottomMargin: 10
+            }
+            width: parent.width * 0.1; height: parent.width * 0.1
+            Text{
+                id: rocketText
+                text: hawk.rockets
+                color: "white"
+                anchors {
+                    bottom: parent.bottom
+                    right: parent.right
+                    rightMargin: parent.width * 0.08
+                    bottomMargin: parent.height * 0.08
+                }
+                font.pointSize: 30
+            }
+            MouseArea{
+                height: parent.height
+                width: parent.width
+                onClicked:{
+                    shootRocket();
+                }
             }
         }
-    }
-    Text{
-        id: laserText
-        text: "∞"
-        color: "white"
-        anchors {
-            bottom: laserHUDImage.bottom
-            right: laserHUDImage.right
-            rightMargin: laserHUDImage.width * 0.08
-            bottomMargin: laserHUDImage.height * 0.08
+
+        //Laser HUD
+        Image{
+            id: laserHUDImage
+            source: "../assets/laser_HUD.png"
+            anchors {
+                bottom: parent.bottom
+                right: parent.right
+                rightMargin: 10
+                bottomMargin: 10
+            }
+            width: parent.width * 0.1; height: parent.width * 0.1
+            Text{
+                id: laserText
+                text: "∞"
+                color: "white"
+                anchors {
+                    bottom: parent.bottom
+                    right: parent.right
+                    rightMargin: parent.width * 0.08
+                    bottomMargin: parent.height * 0.08
+                }
+                font.pointSize: 30
+            }
+
+            MouseArea{
+                height: parent.height
+                width: parent.width
+                onClicked:{
+                    shootLaser();
+                }
+            }
+
         }
-        font.pointSize: 30
-    }
 
 
 

@@ -37,7 +37,7 @@ EntityBase{
             var collidedEntityType = collidedEntity.entityType;
 
             if(collidedEntityType == "player"){
-                collidedEntity.health -= 20;
+                collidedEntity.reduceHealth(20);
                 health -= 50;
             }
             else if (collidedEntityType == "Laser"){
@@ -57,8 +57,8 @@ EntityBase{
         removeEntity();
         scene.enemyAmount--;
         if(scene.enemyAmount == 0){
-            scene.inWave = false;
-            waveTimer.restart();
+            if(scene.running)
+             waveTimer.restart();
         }
     }
 }
