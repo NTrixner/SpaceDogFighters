@@ -32,6 +32,8 @@ GameWindow {
         // the "logical size" - the scene content is auto-scaled to match the GameWindow size
         width: 480
         height: 320
+        property bool inWave: false;
+        property int enemyAmount: 0;
 
         PhysicsWorld {
             id: world
@@ -75,7 +77,8 @@ GameWindow {
                 }
             }
             BoxCollider {
-                collidesWith: Box.Category2
+                collidesWith: Box.Category2 | Box.Category3
+                categories: Box.Category1
                 id: hawkCollider
                 width: parent.width; height: parent.height
 
@@ -125,6 +128,21 @@ GameWindow {
                 x: scene.width * 0.6
                 bodyType: Body.Static
             }
+        }
+        //Enemy wave control
+        Timer{
+            id: waveTimer;
+            interval: 5000; running: true; repeat: false
+            onTriggered: {
+                    var upperRange = 6;
+                    var newEnemies = Math.floor((Math.random()*upperRange)+1);
+                    var enemyDistance = scene.height / newEnemies;
+                    for(var i = 0; i < newEnemies; i++){
+                        spawnEnemy(scene.width + 100, enemyDistance * i);
+                    }
+                    scene.enemyAmount = newEnemies;
+                    scene.inWave = true;
+                }
         }
 
     }
@@ -265,6 +283,19 @@ GameWindow {
 
         entityManager.createEntityFromUrlWithProperties(
                     Qt.resolvedUrl("Laser.qml"),
+                    newEntityProperties);
+    }
+
+    function spawnEnemy(x, y){
+        var newEntityProperties = {
+            x: x,
+            y: y,
+            z: 2,
+            scene: scene,
+            waveTimer: waveTimer
+        }
+        entityManager.createEntityFromUrlWithProperties(
+                    Qt.resolvedUrl("Raven.qml"),
                     newEntityProperties);
     }
 }

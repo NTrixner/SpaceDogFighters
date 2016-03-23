@@ -6,8 +6,6 @@ EntityBase{
     height: 2
     width: 10
     property point pointOfOrigin
-    x: pointOfOrigin.x
-    y: pointOfOrigin.y - (height / 2)
     property Scene scene
 
     Image{
@@ -21,12 +19,15 @@ EntityBase{
         categories: Box.Category4
         width: parent.width; height: parent.height
         linearVelocity: Qt.point(300, 0)
+        collisionTestingOnlyMode: true
     }
-    Timer{
-        interval: 500; running: true; repeat: true
-        onTriggered: {
-            if(x > scene.width)
-                removeEntity()
-        }
+
+    PathMovement{
+        velocity: 300
+        waypoints: [
+            {x: pointOfOrigin.x, y: pointOfOrigin.y - (parent.height / 2)},
+            {x: scene.width, y: pointOfOrigin.y - (parent.height / 2)}
+        ]
+        onPathCompleted: parent.removeEntity();
     }
 }

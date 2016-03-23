@@ -46,4 +46,5 @@ DISTFILES += \
     LICENSE \
     README.md \
     qml/Rocket.qml \
-    qml/Laser.qml
+    qml/Laser.qml \
+    qml/Raven.qml
