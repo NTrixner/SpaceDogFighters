@@ -8,6 +8,7 @@ EntityBase {
     property point pointOfOrigin
     x: pointOfOrigin.x
     y: pointOfOrigin.y - (height / 2)
+    property Scene scene
 
     Image{
         source: "../assets/rocket.png"
@@ -19,5 +20,12 @@ EntityBase {
         categories: Box.Category4
         width: parent.width; height: parent.height
         linearVelocity: Qt.point(100, 0)
+    }
+    Timer{
+        interval: 500; running: true; repeat: true
+        onTriggered: {
+            if(x > scene.width)
+                removeEntity()
+        }
     }
 }

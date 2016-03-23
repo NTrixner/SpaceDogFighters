@@ -36,7 +36,7 @@ GameWindow {
         PhysicsWorld {
             id: world
             updatesPerSecondForPhysics: 60
-            debugDrawVisible: true
+            debugDrawVisible: false
         }
 
         Image{
@@ -140,7 +140,7 @@ GameWindow {
 
         width: parent.width * 0.1; height: parent.width * 0.1
 
-        visible: system.debugBuild || system.desktopPlatform
+        visible: true
 
         onControllerXPositionChanged: twoAxisController.xAxis = controllerXPosition;
         onControllerYPositionChanged: twoAxisController.yAxis = controllerYPosition;
@@ -150,17 +150,26 @@ GameWindow {
         id: healthText
         text: "Health: " + hawk.health
         color: "white"
-        y: 10
-        x: 150
-        font.pixelSize: 30
+        anchors{
+            left: parent.left
+            top: parent.top
+            leftMargin: 10
+            topMargin: 10
+        }
+
+        font.pointSize: 30
     }
     Text {
         id: livesText
         text: "Lives: " + hawk.lives
         color: "white"
-        y: 10
-        x: 10
-        font.pixelSize: 30
+        anchors{
+            right: parent.right
+            top: parent.top
+            leftMargin: 10
+            topMargin: 10
+        }
+        font.pointSize: 30
     }
 
     //Rocket HUD
@@ -192,7 +201,7 @@ GameWindow {
             rightMargin: rocketHUDImage.width * 0.08
             bottomMargin: rocketHUDImage.height * 0.08
         }
-        font.pixelSize: 30
+        font.pointSize: 30
     }
     //Laser HUD
     Image{
@@ -223,7 +232,7 @@ GameWindow {
             rightMargin: laserHUDImage.width * 0.08
             bottomMargin: laserHUDImage.height * 0.08
         }
-        font.pixelSize: 30
+        font.pointSize: 30
     }
 
 
@@ -234,7 +243,8 @@ GameWindow {
                 pointOfOrigin: Qt.point(
                     hawk.x + hawk.width * 0.6,
                     hawk.y + (hawk.height/2)),
-                z: 1
+                z: 1,
+                scene: scene
             }
 
             entityManager.createEntityFromUrlWithProperties(
@@ -249,7 +259,8 @@ GameWindow {
             pointOfOrigin: Qt.point(
                 hawk.x + hawk.width * 0.6,
                 hawk.y + (hawk.height/2)),
-            z: 1
+            z: 1,
+            scene: scene
         }
 
         entityManager.createEntityFromUrlWithProperties(
