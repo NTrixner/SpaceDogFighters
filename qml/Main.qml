@@ -2,200 +2,131 @@ import VPlay 2.0
 import QtQuick 2.0
 
 GameWindow {
+    //the identifier of the game window
     id: gameWindow
 
-    // You get free licenseKeys from http://v-play.net/licenseKey
-    // With a licenseKey you can:
-    //  * Publish your games & apps for the app stores
-    //  * Remove the V-Play Splash Screen or set a custom one (available with the Pro Licenses)
-    //  * Add plugins to monetize, analyze & improve your apps (available with the Pro Licenses)
-    //licenseKey: "<generate one from http://v-play.net/licenseKey>"
-
+    //tell the game window to load our game as the active scene - this can be changed in order
+    //to create menus etc.
     activeScene: scene
 
-    // the size of the Window can be changed at runtime by pressing Ctrl (or Cmd on Mac) + the number keys 1-8
-    // the content of the logical scene size (480x320 for landscape mode by default) gets scaled to the window size based on the scaleMode
-    // you can set this size to any resolution you would like your project to start with, most of the times the one of your main target device
-    // this resolution is for iPhone 4 & iPhone 4S
+    //the initial size of the game window
     screenWidth: 960
     screenHeight: 640
 
+    //our EntityManager
     EntityManager {
         id: entityManager
+        //the scene for which the EntityManager manages entities
         entityContainer: scene
     }
 
+    //our game will be created as this scene
     Scene {
+        //the scene's identifier
         id: scene
-        Keys.forwardTo: twoAxisController
 
         // the "logical size" - the scene content is auto-scaled to match the GameWindow size
         width: 480
         height: 320
-        property bool running: true;
-        property int enemyAmount: 0;
 
+        //Tell the scene to forward keyboard inputs to our TwoAxisController
+        Keys.forwardTo: twoAxisController
+
+        //make Physics happen!
         PhysicsWorld {
             id: world
+            //physics should run at 60 fps
             updatesPerSecondForPhysics: 60
+            //draw borders around colliders or not
             debugDrawVisible: false
         }
 
-        function showGameOver() {
-            waveTimer.stop();
-            scene.running = false;
-            world.running = false;
-            livesText.text = "";
-            healthText.text = "";
-            gameOverRect.visible = true;
-            gameOverText.visible = true;
-            joystickController.visible = false;
-            laserHUDImage.visible = false;
-            rocketHUDImage.visible = false;
-            entityManager.removeAllEntities();
+        //border to restrict player movement
+        ScreenBorder{
+            scene: scene
         }
 
-
+        //create an image
         Image{
+            //background id
             id: bg
-            source: "../assets/152143.jpg"
+            //source file
+            source: "../assets/background.jpg"
+            //make it fill the whole window
             anchors.fill: parent.gameWindowAnchorItem
+            //make it the "lowest" image in the scene, meaning it gets drawn first
             z: 0
         }
 
+        Level{
+            enemyManager: entityManager
+            gameScreen: scene
+        }
+
+        //add the player entity
         Hawk{
             id: hawk
             x: 20
             y: 130
             z: 2
-            scene: scene
+            missileManager: entityManager
+            hawkScene: scene
 
-            TwoAxisController {
-                id: twoAxisController
-
-                xAxis: joystickController.controllerXPosition
-                yAxis: joystickController.controllerYPosition
-                inputActionsToKeyCode: {
-                    "fire": Qt.Key_Control,
-                    "altfire": Qt.Key_Alt,
-                    "up":Qt.Key_Up,
-                    "down":Qt.Key_Down,
-                    "left":Qt.Key_Left,
-                    "right":Qt.Key_Right
-                }
-                onInputActionPressed: {
-                    if(actionName == "fire") {
-                        shootLaser();
-                    }
-                    if(actionName == "altfire") {
-                        shootRocket();
-                    }
-                }
-            }
             BoxCollider {
-                collidesWith: Box.Category2 | Box.Category3
+                collidesWith: Box.Category2 | Box.Category4 | Box.Category5
                 categories: Box.Category1
                 id: hawkCollider
                 width: parent.width; height: parent.height
 
-                linearVelocity: Qt.point(hawk.speed*twoAxisController.xAxis, -1*hawk.speed*twoAxisController.yAxis)
+                linearVelocity: Qt.point(150*twoAxisController.xAxis, -150*twoAxisController.yAxis)
             }
         }
-
-        EntityBase{
-            id: border
-            BoxCollider{
-                collidesWith: Box.Category1
-                categories: Box.Category2
-                id: topCollider
-                width: scene.width
-                height: 20
-                y: -20
-                x: 0
-                bodyType: Body.Static
-            }
-            BoxCollider{
-                collidesWith: Box.Category1
-                categories: Box.Category2
-                id: bottomCollider
-                width: scene.width
-                height: 20
-                y: scene.height
-                x: 0
-                bodyType: Body.Static
-            }
-            BoxCollider{
-                collidesWith: Box.Category1
-                categories: Box.Category2
-                id: leftCollider
-                width: 20
-                height: scene.height
-                y: 20
-                x: -20
-                bodyType: Body.Static
-            }
-            BoxCollider{
-                collidesWith: Box.Category1
-                categories: Box.Category2
-                id: rightCollider
-                width: 20
-                height: scene.height
-                y: 20
-                x: scene.width * 0.6
-                bodyType: Body.Static
-            }
-        }
-        //Enemy wave control
-        Timer{
-            id: waveTimer;
-            interval: 5000; running: true; repeat: false
-            onTriggered: {
-                    var upperRange = 6;
-                    var newEnemies = Math.floor((Math.random()*upperRange)+1);
-                    var enemyDistance = scene.height / newEnemies;
-                    for(var i = 0; i < newEnemies; i++){
-                        spawnEnemy(scene.width + 100, enemyDistance * i);
-                    }
-                    scene.enemyAmount = newEnemies;
-                    scene.inWave = true;
-                }
-        }
-        Rectangle{
-            visible: false
-            id: gameOverRect
-            color: "#88888888"
-            anchors.fill: scene.gameWindowAnchorItem
-            z: 10
-            Text{
-                id: gameOverText
-                text: "Game Over!"
-                color: "white"
-                anchors{
-                    verticalCenter: parent.verticalCenter
-                    horizontalCenter: parent.horizontalCenter
-                }
-            }
-        }
-    }
 
         JoystickControllerHUD {
             id: joystickController
-
+            //Anchor the joystick left bottom (for use with the left thumb)
+            //Add a margin so it won't stick to the border of the screen
             anchors{
-                left: parent.left
-                bottom: parent.bottom
-                leftMargin: 10
-                bottomMargin: 10
+                left: scene.left
+                bottom: scene.bottom
+                leftMargin: 5
+                bottomMargin: 5
             }
 
-            width: parent.width * 0.1; height: parent.width * 0.1
+            //Set the controller's size
+            width: 50; height: 50
 
-            visible: true
+            //Only show the controller on a debug build or when we are on anything
+            //but a desktop
+            visible: system.debugBuild || !system.desktopPlatform
 
-            onControllerXPositionChanged: twoAxisController.xAxis = controllerXPosition;
-            onControllerYPositionChanged: twoAxisController.yAxis = controllerYPosition;
-
+            //onControllerXPositionChanged: twoAxisController.xAxis = controllerXPosition;
+            //onControllerYPositionChanged: twoAxisController.yAxis = controllerYPosition;
         }
+
+        TwoAxisController {
+            id: twoAxisController
+
+            xAxis: joystickController.controllerXPosition
+            yAxis: joystickController.controllerYPosition
+            inputActionsToKeyCode: {
+                "fire": Qt.Key_Control,
+                        "altfire": Qt.Key_Alt,
+                        "up":Qt.Key_Up,
+                        "down":Qt.Key_Down,
+                        "left":Qt.Key_Left,
+                        "right":Qt.Key_Right
+            }
+            onInputActionPressed: {
+                if(actionName == "fire") {
+                    hawk.shootLaser();
+                }
+                if(actionName == "altfire") {
+                    hawk.shootRocket();
+                }
+            }
+        }
+
         //HUD
         Text {
             id: healthText
@@ -208,7 +139,8 @@ GameWindow {
                 topMargin: 10
             }
 
-            font.pointSize: 30
+            font.pixelSize: 30
+            z: 10
         }
         Text {
             id: livesText
@@ -217,42 +149,11 @@ GameWindow {
             anchors{
                 right: parent.right
                 top: parent.top
-                leftMargin: 10
+                rightMargin: 10
                 topMargin: 10
             }
-            font.pointSize: 30
-        }
-
-        //Rocket HUD
-        Image{
-            id: rocketHUDImage
-            source: "../assets/rocket_HUD.png"
-            anchors {
-                bottom: parent.bottom
-                right: laserHUDImage.left
-                rightMargin: 10
-                bottomMargin: 10
-            }
-            width: parent.width * 0.1; height: parent.width * 0.1
-            Text{
-                id: rocketText
-                text: hawk.rockets
-                color: "white"
-                anchors {
-                    bottom: parent.bottom
-                    right: parent.right
-                    rightMargin: parent.width * 0.08
-                    bottomMargin: parent.height * 0.08
-                }
-                font.pointSize: 30
-            }
-            MouseArea{
-                height: parent.height
-                width: parent.width
-                onClicked:{
-                    shootRocket();
-                }
-            }
+            font.pixelSize: 30
+            z: 10
         }
 
         //Laser HUD
@@ -262,10 +163,12 @@ GameWindow {
             anchors {
                 bottom: parent.bottom
                 right: parent.right
-                rightMargin: 10
-                bottomMargin: 10
+                rightMargin: 5
+                bottomMargin: 5
             }
-            width: parent.width * 0.1; height: parent.width * 0.1
+            width: 50; height: 50
+            z: 10
+            //This adds text on top of the image
             Text{
                 id: laserText
                 text: "∞"
@@ -273,67 +176,56 @@ GameWindow {
                 anchors {
                     bottom: parent.bottom
                     right: parent.right
-                    rightMargin: parent.width * 0.08
-                    bottomMargin: parent.height * 0.08
+                    rightMargin: 4
+                    bottomMargin: 4
                 }
-                font.pointSize: 30
+                font.pixelSize: 20
             }
 
+            //This is a clickable mouse area, it can be activated by a mouse or by a touch
             MouseArea{
                 height: parent.height
                 width: parent.width
                 onClicked:{
-                    shootLaser();
+                    hawk.shootLaser();
                 }
             }
-
         }
 
-
-
-    function shootRocket(){
-        if(hawk.rockets > 0 ){
-            var newEntityProperties = {
-                pointOfOrigin: Qt.point(
-                    hawk.x + hawk.width * 0.6,
-                    hawk.y + (hawk.height/2)),
-                z: 1,
-                scene: scene
+        //Rocket HUD
+        Image{
+            id: rocketHUDImage
+            source: "../assets/rocket_HUD.png"
+            anchors {
+                bottom: parent.bottom
+                right: laserHUDImage.left
+                rightMargin: 5
+                bottomMargin: 5
+            }
+            width: 50; height: 50
+            z: 10
+            //This adds text on top of the image
+            Text{
+                id: rocketText
+                text: hawk.rockets
+                color: "white"
+                anchors {
+                    bottom: parent.bottom
+                    right: parent.right
+                    rightMargin: 4
+                    bottomMargin: 4
+                }
+                font.pixelSize: 20
             }
 
-            entityManager.createEntityFromUrlWithProperties(
-                        Qt.resolvedUrl("Rocket.qml"),
-                        newEntityProperties);
-            hawk.rockets--;
+            //This is a clickable mouse area, it can be activated by a mouse or by a touch
+            MouseArea{
+                height: parent.height
+                width: parent.width
+                onClicked:{
+                    hawk.shootRocket();
+                }
+            }
         }
-    }
-
-    function shootLaser(){
-        var newEntityProperties = {
-            pointOfOrigin: Qt.point(
-                hawk.x + hawk.width * 0.6,
-                hawk.y + (hawk.height/2)),
-            z: 1,
-            scene: scene
-        }
-
-        entityManager.createEntityFromUrlWithProperties(
-                    Qt.resolvedUrl("Laser.qml"),
-                    newEntityProperties);
-    }
-
-    function spawnEnemy(x, y){
-        var newEntityProperties = {
-            x: x,
-            y: y,
-            z: 2,
-            scene: scene,
-            waveTimer: waveTimer
-        }
-        entityManager.createEntityFromUrlWithProperties(
-                    Qt.resolvedUrl("Raven.qml"),
-                    newEntityProperties);
     }
 }
-
-

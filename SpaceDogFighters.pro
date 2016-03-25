@@ -22,7 +22,8 @@ RESOURCES += #    resources.qrc # uncomment for publishing
 
 
 # The .cpp file which was generated for your project. Feel free to hack it.
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    tutorial.qdoc
 
 android {
     ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
@@ -47,4 +48,5 @@ DISTFILES += \
     README.md \
     qml/Rocket.qml \
     qml/Laser.qml \
-    qml/Raven.qml
+    qml/Raven.qml \
+    assets/EngineParticle.json

@@ -6,8 +6,9 @@ EntityBase{
     height: 50
     width: 50
     property int health: 50
-    property Scene scene
-    property Timer waveTimer
+    property variant waypoints
+    property Level level
+
 
     Image{
         height: parent.height
@@ -15,30 +16,68 @@ EntityBase{
         source: "../assets/raven.png"
     }
 
+
     PathMovement{
+        id: ravenMovement
         velocity: 150
-        waypoints: [
-            {x: parent.x, y: parent.y},
-            {x: 0 - parent.width, y: parent.y}
-        ]
+        waypoints: parent.waypoints
         onPathCompleted: destroyRaven();
+        running: true;
+        rotationAnimationEnabled: false
+        onWaypointReached:{
+            if(waypointIndex == 1)
+            {
+                level.stage = 2;
+                level.startTimer();
+                ravenMovement.running = false;
+                shootingTimer.running = true;
+            }
+        }
+    }
+
+    Timer{
+        id: shootingTimer
+        interval: 300 + utils.generateRandomValueBetween(100, 600)
+        repeat: true
+        running: false
+        onTriggered: shootLaser();
+    }
+
+    function stopShooting(){
+        shootingTimer.running = false;
+    }
+
+    function startMoving(){
+        ravenMovement.running = true;
+    }
+
+    function destroyRaven(){
+        level.currentEnemies--;
+        if(level.currentEnemies == 0){
+            level.stage = 4;
+            level.startTimer();
+        }
+        removeEntity();
     }
 
     BoxCollider{
         height: parent.height
         width: parent.width
 
-        collidesWith: Box.Category4 | Box.Category1
+        collidesWith: Box.Category1 | Box.Category3
         collisionTestingOnlyMode: true
-        categories: Box.Category3
-        fixture.onBeginContact: {
-            var body = other.getBody();
-            var collidedEntity = body.target;
-            var collidedEntityType = collidedEntity.entityType;
+        categories: Box.Category2
 
-            if(collidedEntityType == "player"){
-                collidedEntity.reduceHealth(20);
-                health -= 50;
+        fixture.onBeginContact: {
+            //find out who the "other" body is
+            var body = other.getBody();
+            //Get the entity that the other body owns
+            var collidedEntity = body.target;
+            //Find out what type of entity it is (gotta be that Hawk!)
+            var collidedEntityType = collidedEntity.entityType;
+            if(collidedEntityType == "Hawk"){
+                collidedEntity.loseHealth(40);
+                health = 0;
             }
             else if (collidedEntityType == "Laser"){
                 health -= 20;
@@ -53,12 +92,19 @@ EntityBase{
             }
         }
     }
-    function destroyRaven(){
-        removeEntity();
-        scene.enemyAmount--;
-        if(scene.enemyAmount == 0){
-            if(scene.running)
-             waveTimer.restart();
+
+    function shootLaser(){
+        //Set the properties of the new laser
+        var newEntityProperties = {
+            waypoints: [
+                Qt.point(x + width * 0.6, y + (height/2) - 1),
+                Qt.point(-10, y + (height/2) - 1)
+            ],
+            z: 1
         }
+        //Spawn a rocket from the Laser.qml file with our properties
+        entityManager.createEntityFromUrlWithProperties(
+                    Qt.resolvedUrl("EnemyLaser.qml"),
+                    newEntityProperties);
     }
 }

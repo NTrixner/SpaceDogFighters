@@ -5,8 +5,9 @@ EntityBase{
     entityType: "Laser"
     height: 2
     width: 10
-    property point pointOfOrigin
-    property Scene scene
+
+    //The path the laser should take
+    property variant waypoints;
 
     Image{
         source: "../assets/laser.png"
@@ -15,19 +16,20 @@ EntityBase{
     }
 
     BoxCollider{
-        collidesWith: Box.Category3
-        categories: Box.Category4
+        collidesWith: Box.Category2
+        categories: Box.Category3
         width: parent.width; height: parent.height
-        linearVelocity: Qt.point(300, 0)
+
+        //add this line so the laser doesn't shove enemy ships around
         collisionTestingOnlyMode: true
     }
 
     PathMovement{
+        //set the laser's velocity
         velocity: 300
-        waypoints: [
-            {x: pointOfOrigin.x, y: pointOfOrigin.y - (parent.height / 2)},
-            {x: scene.width, y: pointOfOrigin.y - (parent.height / 2)}
-        ]
+        //set the laser's path
+        waypoints: parent.waypoints
+        //on completion, remove the entity from the Entity Manager
         onPathCompleted: parent.removeEntity();
     }
 }
